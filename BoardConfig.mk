@@ -116,7 +116,9 @@ TW_NO_REBOOT_BOOTLOADER := true
 TW_HAS_DOWNLOAD_MODE := true
 TW_USE_SERIALNO_PROPERTY_FOR_DEVICE_ID := true
 TW_BACKUP_EXCLUSIONS := /data/fonts/files
-TW_EXTRA_LANGUAGES := true
+# Keep only the default recovery language to reduce recovery.img size.
+# Enable TW_EXTRA_LANGUAGES again only if the image fits the recovery partition.
+# TW_EXTRA_LANGUAGES := true
 TW_EXCLUDE_APEX := true
 TW_NO_EXFAT_FUSE := true
 TW_EXCLUDE_DEFAULT_USB_INIT := true
