@@ -97,6 +97,8 @@ PLATFORM_VERSION := 99.87.36
 PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
 PLATFORM_SECURITY_PATCH := 2099-12-31
 BOOT_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
+# Must match the stock A35 vendor firmware used for encrypted /data.
+VENDOR_SECURITY_PATCH := 2025-04-01
 
 # Recovery
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
@@ -125,9 +127,10 @@ TW_EXCLUDE_DEFAULT_USB_INIT := true
 TW_INCLUDE_CRYPTO := true
 TW_FORCE_KEYMASTER_VER := false
 TW_ENABLE_FS_COMPRESSION := true
-TW_INCLUDE_NTFS_3G := true
+# Optional filesystem support removed to reduce recovery.img size.
+# TW_INCLUDE_NTFS_3G := true
 TW_INCLUDE_RESETPROP := true
-TW_INCLUDE_REPACKTOOLS := true
+TW_INCLUDE_REPACKTOOLS := true # Required by postrecoveryboot.sh (magiskboot)
 TW_INCLUDE_LPDUMP := true
 TW_INCLUDE_LPTOOLS := true
 
