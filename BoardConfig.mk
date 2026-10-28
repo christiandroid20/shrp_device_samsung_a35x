@@ -128,9 +128,7 @@ TW_ENABLE_FS_COMPRESSION := true
 # Optional filesystem support removed to reduce recovery.img size.
 # TW_INCLUDE_NTFS_3G := true
 TW_INCLUDE_RESETPROP := true
-# Optional boot-image repacking tools removed from the recovery build.
-# Re-enable only if the recovery image has enough partition headroom.
-# TW_INCLUDE_REPACKTOOLS := true
+TW_INCLUDE_REPACKTOOLS := true # Required by postrecoveryboot.sh (magiskboot)
 TW_INCLUDE_LPDUMP := true
 TW_INCLUDE_LPTOOLS := true
 
