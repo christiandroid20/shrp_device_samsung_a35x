@@ -9,13 +9,17 @@ on fs
     mkdir /dev/socket/iwt 0770 system system
     mkdir /dev/socket/iwt/ca 0770 system system
 
+# Secuencia TEEGRIS por eventos (sin wait_for_prop): si un daemon nunca
+# llega a Ready, init no se bloquea y el recovery/ADB siguen arrancando.
 on property:hwservicemanager.ready=true && property:crypto.ready=1
     start tz_service
-    wait_for_prop vendor.tzdaemon Ready
+
+on property:vendor.tzdaemon=Ready
     setprop vendor.TEEGRIS.loaded true
     write /proc/iccc_ready 1
     start tzts_service
-    wait_for_prop vendor.tzts_daemon Ready
+
+on property:vendor.tzts_daemon=Ready
     start vendor.keymint-default
     start vendor.gatekeeper-1-0
 

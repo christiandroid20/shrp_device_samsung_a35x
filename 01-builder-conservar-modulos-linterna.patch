@@ -1,0 +1,33 @@
+--- a/.github/workflows/SkyHawk-SHRP.yml	2026-10-31 16:32:05.082631111 +0000
++++ b/.github/workflows/SkyHawk-SHRP.yml	2026-10-31 16:32:05.103915178 +0000
+@@ -744,8 +744,10 @@
+           # Recovery does not use camera capture, ISP tuning, NPU, or the
+           # hardware video codec. Keep display, touchscreen, USB, Wi-Fi,
+           # storage, fingerprint, TEE and encryption-related modules.
++          # fimc-is.ko define camera_class y is-flash-sm5714.ko lo importa (ruta de la
++          # linterna /sys/devices/virtual/camera/flash). Ellos y sus dependencias
++          # (pablo-hws/libs/icpu/smc, votf) se conservan como en BUILD A.
+           EXCLUDED_MODULES=(
+-            fimc-is.ko
+             is-cis-3l6.ko
+             is-cis-gn8.ko
+             is-cis-imx882.ko
+@@ -753,18 +755,12 @@
+             is-cis-gc05a3.ko
+             is-cis-gc08a3.ko
+             is-actuator-ak737x.ko
+-            is-flash-sm5714.ko
+-            pablo-hws.ko
+-            pablo-libs.ko
+-            pablo-icpu.ko
+             pablo-self-tests.ko
+-            pablo-smc.ko
+             is-device-eeprom.ko
+             is-device-otprom.ko
+             smfc.ko
+             scaler.ko
+             gdc.ko
+-            votf.ko
+             npu.ko
+             exynos_mfc.ko
+           )
