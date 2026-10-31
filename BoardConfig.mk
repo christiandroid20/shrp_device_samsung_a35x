@@ -140,6 +140,8 @@ TW_INCLUDE_RESETPROP := true
 TW_INCLUDE_REPACKTOOLS := true # Required by postrecoveryboot.sh (magiskboot)
 TW_INCLUDE_LPDUMP := true
 TW_INCLUDE_LPTOOLS := true
+# Enable the staged GSI Manager tools in the matching SHRP core feature branch.
+TW_INCLUDE_GSI_MANAGER := true
 
 # SHRP specific
 SHRP_DEVICE_CODE := a35x
