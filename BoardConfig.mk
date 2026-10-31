@@ -21,8 +21,11 @@ TARGET_2ND_CPU_ABI2 := armeabi
 TARGET_2ND_CPU_VARIANT := cortex-a55
 
 # Bootloader
+TARGET_SOC := s5e8835
 TARGET_BOOTLOADER_BOARD_NAME := s5e8835
 TARGET_NO_BOOTLOADER := true
+TARGET_NO_RADIOIMAGE := true
+TARGET_USES_UEFI := true
 
 # Platform
 TARGET_BOARD_PLATFORM := $(PRODUCT_PLATFORM)
@@ -124,7 +127,11 @@ TW_BACKUP_EXCLUSIONS := /data/fonts/files
 TW_EXCLUDE_APEX := true
 TW_NO_EXFAT_FUSE := true
 TW_EXCLUDE_DEFAULT_USB_INIT := true
-TW_INCLUDE_CRYPTO := true
+# Diagnostic baseline only: disable crypto/keymaster integration until
+# recovery UI and USB/ADB startup are verified. This branch cannot decrypt /data.
+TW_INCLUDE_CRYPTO := false
+TW_INCLUDE_CRYPTO_FBE := false
+TW_INCLUDE_FBE_METADATA_DECRYPT := false
 TW_FORCE_KEYMASTER_VER := false
 TW_ENABLE_FS_COMPRESSION := true
 # Optional filesystem support removed to reduce recovery.img size.
