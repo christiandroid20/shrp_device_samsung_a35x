@@ -127,11 +127,12 @@ TW_BACKUP_EXCLUSIONS := /data/fonts/files
 TW_EXCLUDE_APEX := true
 TW_NO_EXFAT_FUSE := true
 TW_EXCLUDE_DEFAULT_USB_INIT := true
-# Diagnostic baseline only: disable crypto/keymaster integration until
-# recovery UI and USB/ADB startup are verified. This branch cannot decrypt /data.
-TW_INCLUDE_CRYPTO := false
-TW_INCLUDE_CRYPTO_FBE := false
-TW_INCLUDE_FBE_METADATA_DECRYPT := false
+# A35x encrypted /data diagnostic build.
+# Enable TWRP/SHRP crypto, FBE and metadata decryption so runtime failures
+# are observable. Keep automatic Keymaster version override disabled.
+TW_INCLUDE_CRYPTO := true
+TW_INCLUDE_CRYPTO_FBE := true
+TW_INCLUDE_FBE_METADATA_DECRYPT := true
 TW_FORCE_KEYMASTER_VER := false
 TW_ENABLE_FS_COMPRESSION := true
 # Optional filesystem support removed to reduce recovery.img size.
