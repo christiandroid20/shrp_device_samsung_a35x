@@ -1,27 +1,11 @@
-on post-fs
-# TEEGRIS service
-    mkdir /mnt/vendor/efs/tee 0700 system system
-    mkdir /dev/socket/iwt 0770 system system
-    mkdir /dev/socket/iwt/ca 0770 system system
-    start tz_service
-    wait_for_prop vendor.tzdaemon Ready
-    setprop vendor.TEEGRIS.loaded true
-    write /proc/iccc_ready 1
-    start tzts_service
-    wait_for_prop vendor.tzts_daemon Ready
+# A35x recovery: TEEGRIS startup is owned by
+# /init.recovery.teegris.rc.
+#
+# Do not start tz_service here or wait_for_prop for vendor.tzdaemon /
+# vendor.tzts_daemon. The recovery init file starts these daemons in a
+# non-blocking, property-triggered sequence after trustlet extraction.
+# Keeping the old post-fs wait_for_prop sequence here can block init before
+# the recovery UI is launched when a TEE daemon never reaches Ready.
 
 on post-fs-data
-# TEEGRIS service
     mkdir /data/vendor/tee 0700 system system
-
-service tz_service /vendor/bin/tzdaemon
-    class core
-    user system
-    group system readproc
-    disabled
-
-service tzts_service /vendor/bin/tzts_daemon
-    class core
-    user system
-    group system
-    disabled
