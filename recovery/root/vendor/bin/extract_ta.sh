@@ -1,71 +1,87 @@
 #!/sbin/sh
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#	  http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# A35x TEE trustlet extraction for recovery.
+# Do not report crypto.ready=1 unless every required file was copied.
 #
 
-while ! test -e "/dev/block/mapper/vendor";
-do
-  sleep 1;
-done;
+VENDOR_BLOCK="/dev/block/mapper/vendor"
+VENDOR_MOUNT="/tmp/a35x_vendor"
+TEE_TARGET="/vendor/tee"
+MODEL="$(getprop ro.boot.em.model)"
+TIMEOUT=120
+ELAPSED=0
+RESULT=1
 
-mkdir -p "/tmp/vendor";
-if mount -o ro "/dev/block/mapper/vendor" "/tmp/vendor"; then
-  mkdir -m 755 "/vendor/tee";
-  mkdir -m 755 "/vendor/tee/driver";
+log() {
+    echo "extract_ta: $*" > /dev/kmsg 2>/dev/null
+}
 
-  model=$(getprop "ro.boot.em.model")
-  
-  case "$model" in
-    "SM-A546E")
-      if [ -d "/tmp/vendor/tee_sea" ]; then
-        tee_dir="/tmp/vendor/tee_sea"
-      else
-        tee_dir="/tmp/vendor/tee"
-      fi
-      ;;
-    "SM-A546B")
-      if [ -d "/tmp/vendor/tee_eur" ]; then
-        tee_dir="/tmp/vendor/tee_eur"
-      else
-        tee_dir="/tmp/vendor/tee"
-      fi
-      ;;
-    *)
-      tee_dir="/tmp/vendor/tee"
-      ;;
-  esac
+# The mapper can appear after first-stage logical partition setup.
+while [ ! -e "$VENDOR_BLOCK" ]; do
+    if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+        log "timeout waiting for $VENDOR_BLOCK (model=$MODEL)"
+        setprop crypto.ready 0
+        setprop crypto.error "vendor_mapper_timeout"
+        exit 1
+    fi
+    sleep 1
+    ELAPSED=$((ELAPSED + 1))
+done
 
-  # Crypto Manager Driver
-  cp -p "$tee_dir/driver/00000000-0000-0000-0000-53626f786476" \
-    "/vendor/tee/driver/00000000-0000-0000-0000-53626f786476";
-  # ICCC Driver
-  cp -p "$tee_dir/driver/00000000-0000-0000-0000-494363447256" \
-    "/vendor/tee/driver/00000000-0000-0000-0000-494363447256";
-  # KeyMint TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-4b45594d5354" \
-    "/vendor/tee/00000000-0000-0000-0000-4b45594d5354";
-  # TZ_ICCC TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-0053545354ab" \
-    "/vendor/tee/00000000-0000-0000-0000-0053545354ab";
-  # Gatekeeper TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-474154454b45" \
-    "/vendor/tee/00000000-0000-0000-0000-474154454b45";
+mkdir -p "$VENDOR_MOUNT" "$TEE_TARGET/driver" || {
+    setprop crypto.ready 0
+    setprop crypto.error "mkdir_failed"
+    exit 1
+}
 
-  umount "/tmp/vendor";
+if ! mount -o ro "$VENDOR_BLOCK" "$VENDOR_MOUNT"; then
+    log "unable to mount vendor"
+    setprop crypto.ready 0
+    setprop crypto.error "vendor_mount_failed"
+    exit 1
 fi
 
-rm -r "/tmp/vendor";
+# Samsung firmware may place A35 trustlets in a regional tee_* folder.
+# Select the source by the complete A35 trustlet UUID set, not by model name.
+TEE_SOURCE=""
+for candidate in "$VENDOR_MOUNT"/tee*; do
+    [ -d "$candidate" ] || continue
 
-setprop "crypto.ready" "1";
+    if [ -f "$candidate/driver/00000000-0000-0000-0000-53626f786476" ] &&
+       [ -f "$candidate/driver/00000000-0000-0000-0000-494363447256" ] &&
+       [ -f "$candidate/00000000-0000-0000-0000-4b45594d5354" ] &&
+       [ -f "$candidate/00000000-0000-0000-0000-0053545354ab" ] &&
+       [ -f "$candidate/00000000-0000-0000-0000-474154454b45" ]; then
+        TEE_SOURCE="$candidate"
+        break
+    fi
+done
 
-exit 0;
+if [ -z "$TEE_SOURCE" ]; then
+    log "no tee directory contains all required A35 trustlets (model=$MODEL)"
+    setprop crypto.ready 0
+    setprop crypto.error "required_trustlets_missing"
+else
+    if cp -p "$TEE_SOURCE/driver/00000000-0000-0000-0000-53626f786476" "$TEE_TARGET/driver/" &&
+       cp -p "$TEE_SOURCE/driver/00000000-0000-0000-0000-494363447256" "$TEE_TARGET/driver/" &&
+       cp -p "$TEE_SOURCE/00000000-0000-0000-0000-4b45594d5354" "$TEE_TARGET/" &&
+       cp -p "$TEE_SOURCE/00000000-0000-0000-0000-0053545354ab" "$TEE_TARGET/" &&
+       cp -p "$TEE_SOURCE/00000000-0000-0000-0000-474154454b45" "$TEE_TARGET/"; then
+        RESULT=0
+    fi
+
+    if [ "$RESULT" -eq 0 ]; then
+        log "trustlets copied from $TEE_SOURCE for $MODEL"
+        setprop crypto.error ""
+        setprop crypto.ready 1
+    else
+        log "failed copying one or more trustlets from $TEE_SOURCE"
+        setprop crypto.ready 0
+        setprop crypto.error "trustlet_copy_failed"
+    fi
+fi
+
+umount "$VENDOR_MOUNT"
+rmdir "$VENDOR_MOUNT" 2>/dev/null
+
+exit "$RESULT"
