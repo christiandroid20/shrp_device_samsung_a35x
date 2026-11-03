@@ -125,7 +125,9 @@ TW_EXCLUDE_DEFAULT_USB_INIT := true
 TW_INCLUDE_CRYPTO := true
 TW_FORCE_KEYMASTER_VER := false
 TW_ENABLE_FS_COMPRESSION := true
-TW_INCLUDE_NTFS_3G := true
+# Optional NTFS userspace driver omitted to keep recovery.img within the 96 MiB recovery partition.
+# USB OTG remains enabled; FAT/exFAT support is unaffected.
+# TW_INCLUDE_NTFS_3G := true
 TW_INCLUDE_RESETPROP := true
 TW_INCLUDE_REPACKTOOLS := true
 TW_INCLUDE_LPDUMP := true
