@@ -1,8 +1,3 @@
-service vendor.keymint-default /vendor/bin/hw/android.hardware.security.keymint-service
-    class early_hal
-    user system
-    group system drmrpc
-
 on post-fs
     mkdir /mnt/vendor/efs/DAK 0775 system system
     restorecon --recursive --force /mnt/vendor/efs/DAK
