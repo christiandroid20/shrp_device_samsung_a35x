@@ -21,8 +21,11 @@ TARGET_2ND_CPU_ABI2 := armeabi
 TARGET_2ND_CPU_VARIANT := cortex-a55
 
 # Bootloader
+TARGET_SOC := s5e8835
 TARGET_BOOTLOADER_BOARD_NAME := s5e8835
 TARGET_NO_BOOTLOADER := true
+TARGET_NO_RADIOIMAGE := true
+TARGET_USES_UEFI := true
 
 # Platform
 TARGET_BOARD_PLATFORM := $(PRODUCT_PLATFORM)
@@ -97,6 +100,8 @@ PLATFORM_VERSION := 99.87.36
 PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
 PLATFORM_SECURITY_PATCH := 2099-12-31
 BOOT_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
+# Must match the stock A35 vendor firmware used for encrypted /data.
+VENDOR_SECURITY_PATCH := 2025-04-01
 
 # Recovery
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
@@ -116,16 +121,24 @@ TW_NO_REBOOT_BOOTLOADER := true
 TW_HAS_DOWNLOAD_MODE := true
 TW_USE_SERIALNO_PROPERTY_FOR_DEVICE_ID := true
 TW_BACKUP_EXCLUSIONS := /data/fonts/files
-TW_EXTRA_LANGUAGES := true
+# Keep only the default recovery language to reduce recovery.img size.
+# Enable TW_EXTRA_LANGUAGES again only if the image fits the recovery partition.
+# TW_EXTRA_LANGUAGES := true
 TW_EXCLUDE_APEX := true
 TW_NO_EXFAT_FUSE := true
 TW_EXCLUDE_DEFAULT_USB_INIT := true
+# A35x encrypted /data diagnostic build.
+# Enable TWRP/SHRP crypto, FBE and metadata decryption so runtime failures
+# are observable. Keep automatic Keymaster version override disabled.
 TW_INCLUDE_CRYPTO := true
+TW_INCLUDE_CRYPTO_FBE := true
+TW_INCLUDE_FBE_METADATA_DECRYPT := true
 TW_FORCE_KEYMASTER_VER := false
 TW_ENABLE_FS_COMPRESSION := true
-TW_INCLUDE_NTFS_3G := true
+# Optional filesystem support removed to reduce recovery.img size.
+# TW_INCLUDE_NTFS_3G := true
 TW_INCLUDE_RESETPROP := true
-TW_INCLUDE_REPACKTOOLS := true
+TW_INCLUDE_REPACKTOOLS := true # Required by postrecoveryboot.sh (magiskboot)
 TW_INCLUDE_LPDUMP := true
 TW_INCLUDE_LPTOOLS := true
 
