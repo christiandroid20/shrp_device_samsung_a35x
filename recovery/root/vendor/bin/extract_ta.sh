@@ -1,71 +1,98 @@
 #!/sbin/sh
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#	  http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# Samsung TEEGRIS TA extraction for Galaxy A35x recovery.
+# crypto.ready is raised only after the required TA and driver files
+# have been copied successfully from the mounted vendor logical partition.
 
-while ! test -e "/dev/block/mapper/vendor";
-do
-  sleep 1;
-done;
+OUT="/tmp/vendor"
+SRC=""
+OK=1
+attempt=0
 
-mkdir -p "/tmp/vendor";
-if mount -o ro "/dev/block/mapper/vendor" "/tmp/vendor"; then
-  mkdir -m 755 "/vendor/tee";
-  mkdir -m 755 "/vendor/tee/driver";
+setprop crypto.ready 0
 
-  model=$(getprop "ro.boot.em.model")
-  
-  case "$model" in
-    "SM-A546E")
-      if [ -d "/tmp/vendor/tee_sea" ]; then
-        tee_dir="/tmp/vendor/tee_sea"
-      else
-        tee_dir="/tmp/vendor/tee"
-      fi
-      ;;
-    "SM-A546B")
-      if [ -d "/tmp/vendor/tee_eur" ]; then
-        tee_dir="/tmp/vendor/tee_eur"
-      else
-        tee_dir="/tmp/vendor/tee"
-      fi
-      ;;
-    *)
-      tee_dir="/tmp/vendor/tee"
-      ;;
-  esac
+cleanup() {
+    umount "$OUT" 2>/dev/null
+    rm -rf "$OUT"
+}
 
-  # Crypto Manager Driver
-  cp -p "$tee_dir/driver/00000000-0000-0000-0000-53626f786476" \
-    "/vendor/tee/driver/00000000-0000-0000-0000-53626f786476";
-  # ICCC Driver
-  cp -p "$tee_dir/driver/00000000-0000-0000-0000-494363447256" \
-    "/vendor/tee/driver/00000000-0000-0000-0000-494363447256";
-  # KeyMint TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-4b45594d5354" \
-    "/vendor/tee/00000000-0000-0000-0000-4b45594d5354";
-  # TZ_ICCC TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-0053545354ab" \
-    "/vendor/tee/00000000-0000-0000-0000-0053545354ab";
-  # Gatekeeper TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-474154454b45" \
-    "/vendor/tee/00000000-0000-0000-0000-474154454b45";
+trap cleanup 0
 
-  umount "/tmp/vendor";
+# Wait for first-stage logical partition mapping, but do not block recovery forever.
+while [ "$attempt" -lt 90 ] && [ ! -e /dev/block/mapper/vendor ]; do
+    sleep 1
+    attempt=$((attempt + 1))
+done
+
+if [ ! -e /dev/block/mapper/vendor ]; then
+    echo "E:extract_ta: vendor mapper did not appear within 90 seconds" >> /tmp/recovery.log
+    exit 1
 fi
 
-rm -r "/tmp/vendor";
+mkdir -p "$OUT" /vendor/tee/driver
+if ! mount -o ro /dev/block/mapper/vendor "$OUT"; then
+    echo "E:extract_ta: failed to mount vendor logical partition" >> /tmp/recovery.log
+    exit 1
+fi
 
-setprop "crypto.ready" "1";
+model="$(getprop ro.boot.em.model)"
+case "$model" in
+    "SM-A546E")
+        if [ -d "$OUT/tee_sea" ]; then
+            SRC="$OUT/tee_sea"
+        else
+            SRC="$OUT/tee"
+        fi
+        ;;
+    "SM-A546B")
+        if [ -d "$OUT/tee_eur" ]; then
+            SRC="$OUT/tee_eur"
+        else
+            SRC="$OUT/tee"
+        fi
+        ;;
+    *)
+        SRC="$OUT/tee"
+        ;;
+esac
 
-exit 0;
+copy_required() {
+    source_file="$1"
+    target_file="$2"
+    if [ ! -s "$source_file" ]; then
+        echo "E:extract_ta: required TEE file missing: $source_file" >> /tmp/recovery.log
+        OK=0
+        return 1
+    fi
+    if ! cp -p "$source_file" "$target_file"; then
+        echo "E:extract_ta: failed to copy: $source_file" >> /tmp/recovery.log
+        OK=0
+        return 1
+    fi
+    return 0
+}
+
+# Crypto Manager Driver
+copy_required "$SRC/driver/00000000-0000-0000-0000-53626f786476" \
+    "/vendor/tee/driver/00000000-0000-0000-0000-53626f786476"
+# ICCC Driver
+copy_required "$SRC/driver/00000000-0000-0000-0000-494363447256" \
+    "/vendor/tee/driver/00000000-0000-0000-0000-494363447256"
+# KeyMint TA
+copy_required "$SRC/00000000-0000-0000-0000-4b45594d5354" \
+    "/vendor/tee/00000000-0000-0000-0000-4b45594d5354"
+# TZ_ICCC TA
+copy_required "$SRC/00000000-0000-0000-0000-0053545354ab" \
+    "/vendor/tee/00000000-0000-0000-0000-0053545354ab"
+# Gatekeeper TA
+copy_required "$SRC/00000000-0000-0000-0000-474154454b45" \
+    "/vendor/tee/00000000-0000-0000-0000-474154454b45"
+
+if [ "$OK" -ne 1 ]; then
+    echo "E:extract_ta: TEE extraction incomplete; crypto.ready remains 0" >> /tmp/recovery.log
+    exit 1
+fi
+
+echo "I:extract_ta: required A35x TEE files copied successfully" >> /tmp/recovery.log
+setprop crypto.ready 1
+exit 0
