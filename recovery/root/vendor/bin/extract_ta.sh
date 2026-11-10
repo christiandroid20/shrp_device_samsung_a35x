@@ -94,5 +94,6 @@ if [ "$OK" -ne 1 ]; then
 fi
 
 echo "I:extract_ta: required A35x TEE files copied successfully" >> /tmp/recovery.log
+cleanup
 setprop crypto.ready 1
 exit 0
