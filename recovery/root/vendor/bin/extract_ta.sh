@@ -10,16 +10,28 @@ TEE="$VENDOR/tee"
 OK=1
 attempt=0
 
+# Never trust the recovery ramdisk's bundled /vendor directory.  The
+# A35 U4 logical vendor device is dm-4 (major:minor 254:4).
 setprop crypto.ready 0
+setprop vendor.TEEGRIS.loaded false
 
-# Wait for first-stage fstab mount of the logical vendor partition.
-while [ "$attempt" -lt 90 ] && [ ! -d "$TEE" ]; do
+vendor_is_real_mounted() {
+    awk '$3 == "254:4" && $5 == "/vendor" { found=1 } END { exit !found }' /proc/self/mountinfo
+}
+
+# Wait for the real logical vendor mount, not merely a directory in ramdisk.
+while [ "$attempt" -lt 90 ] && ! vendor_is_real_mounted; do
     sleep 1
     attempt=$((attempt + 1))
 done
 
+if ! vendor_is_real_mounted; then
+    echo "E:extract_ta: real logical vendor (dm-4) is not mounted at /vendor; refusing ramdisk TA files" >> /tmp/recovery.log
+    exit 1
+fi
+
 if [ ! -d "$TEE" ]; then
-    echo "E:extract_ta: /vendor/tee did not become available within 90 seconds" >> /tmp/recovery.log
+    echo "E:extract_ta: /vendor/tee missing on mounted dm-4" >> /tmp/recovery.log
     exit 1
 fi
 
@@ -49,6 +61,7 @@ if [ "$OK" -ne 1 ]; then
     exit 1
 fi
 
-echo "I:extract_ta: required A35x TEE files found in the real /vendor mount" >> /tmp/recovery.log
+echo "I:extract_ta: required A35x TEE files found on mounted vendor dm-4" >> /tmp/recovery.log
+setprop vendor.TEEGRIS.loaded true
 setprop crypto.ready 1
 exit 0
