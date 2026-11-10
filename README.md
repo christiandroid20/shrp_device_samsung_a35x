@@ -96,3 +96,8 @@ Tras el fix del kernel, `/data` fallaba al montar (`Could not mount /data and un
 - Si el mount de `/data` (y de las particiones lógicas `system`/`vendor`/`product`/etc.) funciona ahora que los 291 módulos cargan con el kernel correcto — pedir `ls -la /dev/block/by-name/` y `dmesg | grep -iE "ufs|mmc|block"` desde `adb shell` en recovery para confirmar qué nodos de bloque existen realmente.
 - Si el TA de Keymint (`extract_ta.sh` / `init.recovery.teegris.rc`) logra desenvolver la llave hardware-wrapped para el esquema ODE de Samsung — esto es standard AOSP FBE en el fstab, pero Samsung puede requerir lógica adicional en vold que TWRP/SHRP no trae de fábrica.
 - `BOARD_GROUP_BASIC_PARTITION_LIST` en BoardConfig.mk no incluye `system_dlkm` aunque sí aparece como partición lógica en el fstab — revisar si hace falta agregarla.
+
+
+## Recovery project credits
+
+See [CREDITS.md](CREDITS.md) for device-tree maintenance, upstream, and AI-assisted development acknowledgements.
