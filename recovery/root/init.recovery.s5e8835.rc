@@ -5,7 +5,7 @@ import /init.recovery.teegris.rc
 
 on early-init
     mkdir /mnt/vendor/efs 0771 radio system
-    mount tmpfs tmpfs /vendor/tee mode=0755
+    # No ocultar /vendor/tee: extract_ta.sh valida los TA del vendor real montado por first-stage.
     start extract_ta
 
 on late-init

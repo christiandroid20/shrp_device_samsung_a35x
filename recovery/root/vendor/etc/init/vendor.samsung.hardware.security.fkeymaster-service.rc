@@ -1,3 +1,8 @@
+service vendor.fkeymaster-default /vendor/bin/vendor.samsung.hardware.security.fkeymaster-service
+    interface aidl vendor.samsung.hardware.security.fkeymaster.ISehFkeymaster/default
+    class early_hal
+    user system
+    group system
 # Se inicia explícitamente cuando TEEGRIS y tzts_daemon están Ready.
 # La biblioteca NDK vive en /system/lib64 y libteecl en /vendor/lib64.
 service vendor.fkeymaster-default /vendor/bin/vendor.samsung.hardware.security.fkeymaster-service

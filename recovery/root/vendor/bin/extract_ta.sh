@@ -1,71 +1,67 @@
 #!/sbin/sh
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#	  http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# Samsung TEEGRIS TA validation for Galaxy A35x recovery.
+# The recovery.fstab mounts the real vendor logical partition at /vendor.
+# TA files already live in /vendor/tee, so do not remount vendor elsewhere
+# or attempt to copy files onto the read-only vendor partition.
 
-while ! test -e "/dev/block/mapper/vendor";
-do
-  sleep 1;
-done;
+VENDOR="/vendor"
+TEE="$VENDOR/tee"
+OK=1
+attempt=0
 
-mkdir -p "/tmp/vendor";
-if mount -o ro "/dev/block/mapper/vendor" "/tmp/vendor"; then
-  mkdir -m 755 "/vendor/tee";
-  mkdir -m 755 "/vendor/tee/driver";
+# Never trust the recovery ramdisk's bundled /vendor directory.  The
+# A35 U4 logical vendor device is dm-4 (major:minor 254:4).
+setprop crypto.ready 0
+setprop vendor.TEEGRIS.loaded false
 
-  model=$(getprop "ro.boot.em.model")
-  
-  case "$model" in
-    "SM-A546E")
-      if [ -d "/tmp/vendor/tee_sea" ]; then
-        tee_dir="/tmp/vendor/tee_sea"
-      else
-        tee_dir="/tmp/vendor/tee"
-      fi
-      ;;
-    "SM-A546B")
-      if [ -d "/tmp/vendor/tee_eur" ]; then
-        tee_dir="/tmp/vendor/tee_eur"
-      else
-        tee_dir="/tmp/vendor/tee"
-      fi
-      ;;
-    *)
-      tee_dir="/tmp/vendor/tee"
-      ;;
-  esac
+vendor_is_real_mounted() {
+    awk '$3 == "254:4" && $5 == "/vendor" { found=1 } END { exit !found }' /proc/self/mountinfo
+}
 
-  # Crypto Manager Driver
-  cp -p "$tee_dir/driver/00000000-0000-0000-0000-53626f786476" \
-    "/vendor/tee/driver/00000000-0000-0000-0000-53626f786476";
-  # ICCC Driver
-  cp -p "$tee_dir/driver/00000000-0000-0000-0000-494363447256" \
-    "/vendor/tee/driver/00000000-0000-0000-0000-494363447256";
-  # KeyMint TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-4b45594d5354" \
-    "/vendor/tee/00000000-0000-0000-0000-4b45594d5354";
-  # TZ_ICCC TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-0053545354ab" \
-    "/vendor/tee/00000000-0000-0000-0000-0053545354ab";
-  # Gatekeeper TA
-  cp -p "$tee_dir/00000000-0000-0000-0000-474154454b45" \
-    "/vendor/tee/00000000-0000-0000-0000-474154454b45";
+# Wait for the real logical vendor mount, not merely a directory in ramdisk.
+while [ "$attempt" -lt 90 ] && ! vendor_is_real_mounted; do
+    sleep 1
+    attempt=$((attempt + 1))
+done
 
-  umount "/tmp/vendor";
+if ! vendor_is_real_mounted; then
+    echo "E:extract_ta: real logical vendor (dm-4) is not mounted at /vendor; refusing ramdisk TA files" >> /tmp/recovery.log
+    exit 1
 fi
 
-rm -r "/tmp/vendor";
+if [ ! -d "$TEE" ]; then
+    echo "E:extract_ta: /vendor/tee missing on mounted dm-4" >> /tmp/recovery.log
+    exit 1
+fi
 
-setprop "crypto.ready" "1";
+check_required() {
+    source_file="$1"
+    if [ ! -s "$source_file" ]; then
+        echo "E:extract_ta: required TEE file missing: $source_file" >> /tmp/recovery.log
+        OK=0
+        return 1
+    fi
+    return 0
+}
 
-exit 0;
+# Crypto Manager Driver
+check_required "$TEE/driver/00000000-0000-0000-0000-53626f786476"
+# ICCC Driver
+check_required "$TEE/driver/00000000-0000-0000-0000-494363447256"
+# KeyMint TA
+check_required "$TEE/00000000-0000-0000-0000-4b45594d5354"
+# TZ_ICCC TA
+check_required "$TEE/00000000-0000-0000-0000-0053545354ab"
+# Gatekeeper TA
+check_required "$TEE/00000000-0000-0000-0000-474154454b45"
+
+if [ "$OK" -ne 1 ]; then
+    echo "E:extract_ta: TEE validation incomplete; crypto.ready remains 0" >> /tmp/recovery.log
+    exit 1
+fi
+
+echo "I:extract_ta: required A35x TEE files found on mounted vendor dm-4" >> /tmp/recovery.log
+setprop vendor.TEEGRIS.loaded true
+setprop crypto.ready 1
+exit 0
