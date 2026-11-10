@@ -19,15 +19,19 @@ on property:vendor.tzdaemon=Ready
     write /proc/iccc_ready 1
     start tzts_service
 
+# KeyMint, Gatekeeper y FKeymaster dependen de que TEEGRIS/TEE-TS
+# hayan terminado su inicialización.
 on property:vendor.tzts_daemon=Ready
     start vendor.keymint-default
     start vendor.gatekeeper-1-0
+    start vendor.fkeymaster-default
 
 on property:twrp.all.users.decrypted=true
     stop tz_service
     stop tzts_service
     stop vendor.keymint-default
     stop vendor.gatekeeper-1-0
+    stop vendor.fkeymaster-default
     umount /mnt/vendor/efs
     umount /efs
 
