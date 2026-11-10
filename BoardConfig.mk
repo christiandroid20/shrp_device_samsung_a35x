@@ -37,7 +37,10 @@ TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/$(BOARD_KERNEL_IMAGE_NAME)
 TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
 BOARD_INCLUDE_RECOVERY_DTBO := true
 BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
-BOARD_RAMDISK_USE_LZ4 := true
+# Test de compresion: GZIP suele producir un ramdisk mas pequeno que LZ4.
+# El kernel Exynos 1380 de referencia declara CONFIG_RD_GZIP=y; validar arranque
+# con el kernel stock del dispositivo antes de distribuir esta imagen.
+BOARD_RAMDISK_USE_LZ4 := false
 
 BOARD_BOOT_HEADER_VERSION := 2
 BOARD_KERNEL_BASE := 0x10000000
