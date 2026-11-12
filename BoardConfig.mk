@@ -88,7 +88,9 @@ TARGET_USERIMAGES_USE_F2FS := true
 BOARD_SUPER_PARTITION_SIZE := 12582912000
 BOARD_SUPER_PARTITION_GROUPS := group_basic
 BOARD_GROUP_BASIC_SIZE := 12578717696
-BOARD_GROUP_BASIC_PARTITION_LIST := system odm product vendor vendor_dlkm system_dlkm
+# system_dlkm is exposed by the stock fstab but is not supported by
+# this SHRP build system's BOARD_GROUP_BASIC_PARTITION_LIST validator.
+BOARD_GROUP_BASIC_PARTITION_LIST := system odm product vendor vendor_dlkm
 
 BOARD_PARTITION_LIST := $(call to-upper, $(BOARD_GROUP_BASIC_PARTITION_LIST))
 $(foreach p, $(BOARD_PARTITION_LIST), $(eval BOARD_$(p)IMAGE_FILE_SYSTEM_TYPE := erofs))
