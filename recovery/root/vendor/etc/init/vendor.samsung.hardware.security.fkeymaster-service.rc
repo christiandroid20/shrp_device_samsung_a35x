@@ -8,5 +8,3 @@ service vendor.fkeymaster-default /vendor/bin/vendor.samsung.hardware.security.f
     group system
     disabled
 
-on property:vendor.tzts_daemon=Ready
-    start vendor.fkeymaster-default
