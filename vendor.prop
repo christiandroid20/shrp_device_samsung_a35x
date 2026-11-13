@@ -1,6 +1,0 @@
-# Samsung A35 keystore properties retained from the stock vendor configuration.
-# Do not hardcode OS/vendor security patch levels here: KeyMint must see the
-# actual installed ROM patch properties when it initializes.
-ro.security.keystore.keytype=sakv2,gak,rkp
-ro.hardware.keystore=mdfpp
-ro.hardware.keystore_desede=true
