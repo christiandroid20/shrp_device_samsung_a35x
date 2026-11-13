@@ -24,7 +24,7 @@ on fs
 on boot
     start health-hal-2-1
 
-service extract_ta /vendor/bin/extract_ta.sh
+service extract_ta /sbin/extract_ta.sh
     user root
     group root
     disabled
