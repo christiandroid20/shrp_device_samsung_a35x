@@ -1,27 +1,22 @@
 #
-# Copyright (C) 2024 The Android Open Source Project
-# Copyright (C) 2024 The TWRP Open Source Project
-#
+# Galaxy A35 5G (a35x) — AERA Recovery 16.0
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# Enable project quotas and casefolding for emulated storage without sdcardfs
-$(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
+LOCAL_PATH := device/samsung/a35x
 
-# VNDK
-PRODUCT_TARGET_VNDK_VERSION := 33
+# The Galaxy A35 launched with Android 14 (API 34). Keep the shipping API
+# distinct from the currently installed Android 15 U4 firmware.
+BOARD_SHIPPING_API_LEVEL := 34
+PRODUCT_SHIPPING_API_LEVEL := 34
+PRODUCT_TARGET_VNDK_VERSION := 34
 
-# API
-PRODUCT_SHIPPING_API_LEVEL := 32
-
-# Dynamic partitions
 PRODUCT_USE_DYNAMIC_PARTITIONS := true
 
-# fastbootd
-PRODUCT_PACKAGES += \
-    android.hardware.fastboot@1.0-impl-mock \
-    fastbootd
-
-# Screen
 TARGET_SCREEN_WIDTH := 1080
 TARGET_SCREEN_HEIGHT := 2340
+
+PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
+
+# Device-specific AERA product options.
+$(call inherit-product, $(LOCAL_PATH)/aera_a35x.mk)
