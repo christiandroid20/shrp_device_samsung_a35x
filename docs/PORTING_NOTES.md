@@ -13,11 +13,11 @@
 2. Added `Android.bp` Soong namespace and aligned `Android.mk` with the AERA reference tree.
 3. Updated shipping API/VNDK metadata to API 34 (A35 launch level); Android 15 U4 remains the target installed firmware.
 4. Moved supported AERA flags into BoardConfig/product makefiles and guarded packaging exports in `vendorsetup.sh`.
-5. Removed hardcoded security patch values from BoardConfig and vendor.prop.
+5. Removed hardcoded security patch values; kept the Samsung keystore properties in PRODUCT_VENDOR_PROPERTIES.
 6. Kept the A35 boot header v2, prebuilt kernel/DTB/DTBO and physical recovery size; changed boot arguments to additive assignments.
 7. Added `system_dlkm` to the dynamic partition list because it is present in the A35 fstab.
-8. Centralized TEEGRIS, KeyMint, Gatekeeper and FKeymaster service definitions in `init.recovery.teegris.rc`; removed duplicate stock vendor service rc files that could start services before TEEGRIS readiness.
-9. Preserved non-blocking EFS mounts and the existing real-vendor TA validation path.
+8. Centralized TEEGRIS, KeyMint, Gatekeeper and FKeymaster service definitions in `init.recovery.teegris.rc`, using init `override` service definitions and removing duplicate recovery-ramdisk vendor service rc files that could start services before TEEGRIS readiness.
+9. Preserved non-blocking EFS mounts and moved the TA validator to `/sbin` so a real `/vendor` mount cannot hide the recovery script. The validator still fails closed unless the expected U4 vendor dm-4 and required TA files are present.
 
 ## Deliberately not enabled
 - Root Manager, WLAN, mobile data, ABL preservation and device-specific fastboot/slot preservation.
