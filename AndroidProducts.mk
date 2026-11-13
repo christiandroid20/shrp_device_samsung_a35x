@@ -1,12 +1,10 @@
 #
-# Copyright (C) 2024 The Android Open Source Project
-# Copyright (C) 2024 The TWRP Open Source Project
-#
+# Galaxy A35 5G (a35x) — AERA Recovery 16.0
 # SPDX-License-Identifier: Apache-2.0
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/omni_a35x.mk
+    $(LOCAL_DIR)/twrp_a35x.mk
 
 COMMON_LUNCH_CHOICES := \
-    omni_a35x-eng
+    twrp_a35x-bp2a-eng
