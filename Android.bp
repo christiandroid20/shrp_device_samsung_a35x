@@ -1,0 +1,7 @@
+//
+// Galaxy A35 5G (a35x) device namespace
+// SPDX-License-Identifier: Apache-2.0
+//
+
+soong_namespace {
+}
