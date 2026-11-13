@@ -48,6 +48,7 @@ on property:twrp.all.users.decrypted=true
     umount /efs
 
 service tz_service /vendor/bin/tzdaemon
+    override
     user system
     group system readproc
     setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
@@ -55,6 +56,7 @@ service tz_service /vendor/bin/tzdaemon
     seclabel u:r:recovery:s0
 
 service tzts_service /vendor/bin/tzts_daemon
+    override
     user system
     group system
     setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
@@ -62,6 +64,7 @@ service tzts_service /vendor/bin/tzts_daemon
     seclabel u:r:recovery:s0
 
 service vendor.keymint-default /vendor/bin/hw/android.hardware.security.keymint-service
+    override
     user system
     group system drmrpc
     setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
@@ -69,6 +72,7 @@ service vendor.keymint-default /vendor/bin/hw/android.hardware.security.keymint-
     seclabel u:r:recovery:s0
 
 service vendor.gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-service
+    override
     interface android.hardware.gatekeeper@1.0::IGatekeeper default
     user system
     group system 5678
@@ -77,6 +81,7 @@ service vendor.gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-ser
     seclabel u:r:recovery:s0
 
 service vendor.fkeymaster-default /vendor/bin/vendor.samsung.hardware.security.fkeymaster-service
+    override
     interface aidl vendor.samsung.hardware.security.fkeymaster.ISehFkeymaster/default
     user system
     group system
