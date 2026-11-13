@@ -75,9 +75,6 @@ BOARD_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy
 # does not sign or replace boot-chain partitions.
 BOARD_AVB_ENABLE := false
 
-# Recovery vendor properties
-TARGET_VENDOR_PROP += $(DEVICE_PATH)/vendor.prop
-
 # Physical partition sizes (bytes). Never increase these to hide image overflow.
 BOARD_FLASH_BLOCK_SIZE := 262144
 BOARD_BOOTIMAGE_PARTITION_SIZE := 67108864
